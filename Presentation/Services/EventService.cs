@@ -8,11 +8,11 @@ namespace Presentation.Services;
 
 public class EventService
 {
-    private readonly DataContext _context;
+    private readonly EventDataContext _context;
     private readonly DbSet<Event> _set;
     private readonly EventBusListener _eventBusListener;
 
-    public EventService(DataContext context, EventBusListener eventBusListener)
+    public EventService(EventDataContext context, EventBusListener eventBusListener)
     {
         _context = context;
         _set = _context.Set<Event>();

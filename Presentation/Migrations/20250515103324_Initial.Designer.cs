@@ -11,7 +11,7 @@ using Presentation.Data;
 
 namespace Presentation.Migrations
 {
-    [DbContext(typeof(DataContext))]
+    [DbContext(typeof(EventDataContext))]
     [Migration("20250515103324_Initial")]
     partial class Initial
     {

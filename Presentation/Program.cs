@@ -27,7 +27,7 @@ builder.Services.AddHostedService<EventBusListener>();
 
 builder.Services.AddScoped<EventService>();
 
-builder.Services.AddDbContext<DataContext>(options =>
+builder.Services.AddDbContext<EventDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
