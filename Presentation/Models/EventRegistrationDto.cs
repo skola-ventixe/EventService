@@ -25,4 +25,5 @@ public class EventRegistrationDto
     public DateTime EndDate { get; set; }
     public DateTime TicketSalesStart { get; set; }
     public string? EventImageUrl { get; set; }
+    public int MaxAttendees { get; set; }
 }

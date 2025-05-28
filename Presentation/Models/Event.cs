@@ -15,6 +15,7 @@ public class Event
     public DateTime EndDate { get; set; }
     public DateTime TicketSalesStart { get; set; }
     public string? EventImageUrl { get; set; }
+    public int MaxAttendees { get; set; }
     public List<Package>? Packages { get; set; } = null!;
 
 
