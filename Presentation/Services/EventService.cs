@@ -122,7 +122,7 @@ public class EventService
         // Fetch attendees count for the event
         try
         {
-            var response = await _httpClient.GetAsync($"https://localhost:7170/api/tickets/sold/{id}");
+            var response = await _httpClient.GetAsync($"https://ventixeticketservice-gzehf9d8cffzfwed.swedencentral-01.azurewebsites.net/api/tickets/sold/{id}");
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
