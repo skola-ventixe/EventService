@@ -60,7 +60,12 @@ public class EventService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var packages = System.Text.Json.JsonSerializer.Deserialize<List<Package>>(content);
+                var serializerOptions = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = true
+                };
+                var packages = System.Text.Json.JsonSerializer.Deserialize<List<Package>>(content, serializerOptions);
                 if (packages != null)
                     returnedEvent.Packages = packages;
             }

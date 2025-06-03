@@ -5,6 +5,7 @@ using Presentation.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -19,6 +20,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<EventService>();
 builder.Services.AddHttpClient();
+
 
 builder.Services.AddDbContext<EventDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
