@@ -1,8 +1,8 @@
 ﻿namespace Presentation.Models;
 
-public class Event
+public class EventInfoDto
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = null!;
     public string EventName { get; set; } = null!;
     public string? EventDescription { get; set; }
     public string Venue { get; set; } = null!;
@@ -16,5 +16,6 @@ public class Event
     public DateTime TicketSalesStart { get; set; }
     public string? EventImageUrl { get; set; }
     public int MaxAttendees { get; set; }
+    public int AttendeesCount { get; set; }
     public List<Package>? Packages { get; set; } = null!;
 }

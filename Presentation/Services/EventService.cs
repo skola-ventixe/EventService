@@ -2,6 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Data;
+using Presentation.Factory;
 using Presentation.Models;
 
 namespace Presentation.Services;
@@ -39,14 +40,49 @@ public class EventService
             };
         }
     }
-    public async Task<Event?> GetEventByIdAsync(string id)
+
+    public async Task<ServiceResponse<Event>> GetEventByIdAsync(string id)
     {
-        Event? returnedEvent;
         try
         {
-            returnedEvent = await _set.FindAsync(id);
-            if (returnedEvent == null)
+            var eventEntity = await _set.FindAsync(id);
+            if (eventEntity == null)
+            {
+                return new ServiceResponse<Event>
+                {
+                    Success = false,
+                    Message = $"Event with ID {id} not found."
+                };
+            }
+            return new ServiceResponse<Event>
+            {
+                Success = true,
+                Data = eventEntity
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ServiceResponse<Event>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    public async Task<EventInfoDto?> GetEventInfoByIdAsync(string id)
+    {
+        EventInfoDto? returnedEvent;
+        try
+        {
+            var eventEntity = await _set.FindAsync(id);
+            if (eventEntity == null)
+            {
+                Console.WriteLine($"Event with ID {id} not found.");
                 return null;
+            }
+
+            returnedEvent = EventFactory.CreateEvent(eventEntity);
         }
         catch (Exception ex)
         {
@@ -54,17 +90,20 @@ public class EventService
             return null;
         }
 
+        var serializerOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
+        // Fetch packages for the event
         try
         {
-            var response = await _httpClient.GetAsync($"https://ventixepackageservice-bnbkbjajh9a4ehhh.swedencentral-01.azurewebsites.net/api/packages/event/{id}");
-            if (response.IsSuccessStatusCode)
+            var packageResponse = await _httpClient.GetAsync($"https://ventixepackageservice-bnbkbjajh9a4ehhh.swedencentral-01.azurewebsites.net/api/packages/event/{id}");
+            if (packageResponse.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                var serializerOptions = new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    WriteIndented = true
-                };
+                var content = await packageResponse.Content.ReadAsStringAsync();
+
                 var packages = System.Text.Json.JsonSerializer.Deserialize<List<Package>>(content, serializerOptions);
                 if (packages != null)
                     returnedEvent.Packages = packages;
@@ -78,6 +117,28 @@ public class EventService
         {
             Console.WriteLine($"Error fetching packages for event {id}: {ex.Message}");
             returnedEvent.Packages = [];
+        }
+
+        // Fetch attendees count for the event
+        try
+        {
+            var response = await _httpClient.GetAsync($"https://localhost:7170/api/tickets/sold/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+
+                var attendeesCount = System.Text.Json.JsonSerializer.Deserialize<int>(content, serializerOptions);
+                    returnedEvent.AttendeesCount = attendeesCount;
+            }
+            else
+            {
+                returnedEvent.AttendeesCount = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching attendees for event {id}: {ex.Message}");
+            returnedEvent.AttendeesCount = 0;
         }
         return returnedEvent;
     }
@@ -96,7 +157,7 @@ public class EventService
     }
     public async Task DeleteEventAsync(string id)
     {
-        var eventToDelete = await GetEventByIdAsync(id);
+        var eventToDelete = (await GetEventByIdAsync(id)).Data;
         if (eventToDelete != null)
         {
             _set.Remove(eventToDelete);

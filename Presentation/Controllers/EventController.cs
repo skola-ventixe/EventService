@@ -22,9 +22,9 @@ namespace Presentation.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetEventById(string id)
+        public async Task<IActionResult> GetEventInfoById(string id)
         {
-            var eventItem = await _eventService.GetEventByIdAsync(id);
+            var eventItem = await _eventService.GetEventInfoByIdAsync(id);
             if (eventItem == null)
             {
                 return NotFound();
@@ -45,7 +45,7 @@ namespace Presentation.Controllers
             }
             var entity = EventFactory.CreateEvent(newEvent);
             await _eventService.AddEventAsync(entity);
-            return CreatedAtAction(nameof(GetEventById), new { id = entity.Id }, newEvent);
+            return CreatedAtAction(nameof(CreateEvent), new { id = entity.Id }, newEvent);
         }
 
         [HttpPut("{id}")]
