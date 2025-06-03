@@ -10,14 +10,12 @@ public class EventService
 {
     private readonly EventDataContext _context;
     private readonly DbSet<Event> _set;
-    private readonly EventBusListener _eventBusListener;
     private readonly HttpClient _httpClient;
 
-    public EventService(EventDataContext context, EventBusListener eventBusListener, HttpClient httpClient)
+    public EventService(EventDataContext context, HttpClient httpClient)
     {
         _context = context;
         _set = _context.Set<Event>();
-        _eventBusListener = eventBusListener;
         _httpClient = httpClient;
     }
     public async Task<ServiceResponse<List<Event>>> GetAllEventsAsync()
@@ -43,25 +41,32 @@ public class EventService
     }
     public async Task<Event?> GetEventByIdAsync(string id)
     {
-        var returnedEvent = await _set.FindAsync(id);
-        if (returnedEvent == null)
+        Event? returnedEvent;
+        try
         {
+            returnedEvent = await _set.FindAsync(id);
+            if (returnedEvent == null)
+                return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Database error: {ex.Message}");
             return null;
         }
 
         try
         {
-            var fetchedPackages = await _httpClient.GetAsync($"https://ventixepackageservice-bnbkbjajh9a4ehhh.swedencentral-01.azurewebsites.net/api/packages/event/{id}");
-
-            if (!fetchedPackages.IsSuccessStatusCode)
+            var response = await _httpClient.GetAsync($"https://ventixepackageservice-bnbkbjajh9a4ehhh.swedencentral-01.azurewebsites.net/api/packages/event/{id}");
+            if (response.IsSuccessStatusCode)
             {
-                return returnedEvent;
+                var content = await response.Content.ReadAsStringAsync();
+                var packages = System.Text.Json.JsonSerializer.Deserialize<List<Package>>(content);
+                if (packages != null)
+                    returnedEvent.Packages = packages;
             }
-            var packagesContent = await fetchedPackages.Content.ReadAsStringAsync();
-            var packages = System.Text.Json.JsonSerializer.Deserialize<List<Package>>(packagesContent);
-            if (packages != null)
+            else
             {
-                returnedEvent.Packages = packages;
+                returnedEvent.Packages = [];
             }
         }
         catch (Exception ex)
@@ -71,6 +76,7 @@ public class EventService
         }
         return returnedEvent;
     }
+
 
     public async Task AddEventAsync(Event newEvent)
     {

@@ -1,4 +1,3 @@
-using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Data;
 using Presentation.Services;
@@ -18,14 +17,8 @@ builder.Services.AddCors(options =>
         });
 });
 
-var serviceBusConnection = builder.Configuration["ServiceBusConnection"];
-builder.Services.AddSingleton(x => new ServiceBusClient(serviceBusConnection));
-builder.Services.AddSingleton(x =>
-    x.GetRequiredService<ServiceBusClient>().CreateSender("packages-bus"));
-builder.Services.AddSingleton<EventBusListener>();
-builder.Services.AddHostedService<EventBusListener>();
-
 builder.Services.AddScoped<EventService>();
+builder.Services.AddHttpClient();
 
 builder.Services.AddDbContext<EventDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
