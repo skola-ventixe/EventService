@@ -5,10 +5,9 @@ namespace Presentation.Models;
 public class Package
 {
     public string? Id { get; set; }
-    public string EventId { get; set; } = null!;
+    public string? EventId { get; set; } = null!;
     public string Name { get; set; } = null!;
 
-    [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 
     public string? Description { get; set; } = null!;

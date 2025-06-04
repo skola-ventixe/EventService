@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using System.IO;
+using Microsoft.AspNetCore.Mvc;
 using Presentation.Factory;
 using Presentation.Models;
 using Presentation.Services;
@@ -35,17 +37,23 @@ namespace Presentation.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] EventRegistrationDto newEvent)
         {
-            if (newEvent == null)
+                if (newEvent == null)
             {
                 return BadRequest("Event cannot be null");
             }
+
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var entity = EventFactory.CreateEvent(newEvent);
-            await _eventService.AddEventAsync(entity);
-            return CreatedAtAction(nameof(CreateEvent), new { id = entity.Id }, newEvent);
+
+            var response = await _eventService.AddEventAsync(newEvent);
+            if (response.Success && response.Data != null)
+            {
+                return CreatedAtAction(nameof(GetEventInfoById), new { id = response.Data.Id }, response.Data);
+            }
+
+            return BadRequest(response.Error);
         }
 
         [HttpPut("{id}")]

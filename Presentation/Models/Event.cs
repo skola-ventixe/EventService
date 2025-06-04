@@ -16,5 +16,4 @@ public class Event
     public DateTime TicketSalesStart { get; set; }
     public string? EventImageUrl { get; set; }
     public int MaxAttendees { get; set; }
-    public List<Package>? Packages { get; set; } = null!;
 }

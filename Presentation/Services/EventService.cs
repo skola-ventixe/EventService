@@ -144,12 +144,91 @@ public class EventService
     }
 
 
-    public async Task AddEventAsync(Event newEvent)
+    public async Task<ServiceResponse<EventInfoDto?>> AddEventAsync(EventRegistrationDto newEvent)
     {
+        if (newEvent == null)
+        {
+            return new ServiceResponse<EventInfoDto?>
+            {
+                Success = false,
+                Error = "Event cannot be null"
+            };
+        }
 
-        await _set.AddAsync(newEvent);
+        var entity = EventFactory.CreateEvent(newEvent);
+
+        try
+        {
+        await _set.AddAsync(entity);
         await _context.SaveChangesAsync();
+        }
+        catch(Exception ex)
+        {
+            return new ServiceResponse<EventInfoDto?>
+            {
+                Success = false,
+                Error = $"Failed to create event: {ex.Message}"
+            };
+        }
+
+        List<Package>? packageResponse = null;
+        try
+        {
+            if (newEvent.Packages != null && newEvent.Packages.Count > 0)
+            {
+                List<PackageRegistrationDto> packages = [.. newEvent.Packages.Select(p => new PackageRegistrationDto
+                {
+                    EventId = entity.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Benefits = p.Benefits?.Select(b => new Benefit
+                    {
+                        PackageId = entity.Id, // Set the PackageId to the new package's id
+                        Description = b.Description,
+                    }).ToList(),
+                    Placement = p.Placement,
+                    Seated = p.Seated,
+                })];
+
+                var jsonData = await _httpClient.PostAsJsonAsync("https://ventixepackageservice-bnbkbjajh9a4ehhh.swedencentral-01.azurewebsites.net/api/packages", packages);
+                if (!jsonData.IsSuccessStatusCode)
+                {
+                    _set.Remove(entity);
+                    await _context.SaveChangesAsync();
+                    return new ServiceResponse<EventInfoDto?>
+                    {
+                        Success = false,
+                        Error = "Failed to create packages for the event."
+                    };
+                }
+                packageResponse = await jsonData.Content.ReadFromJsonAsync<List<Package>>();
+            }
+        }
+        catch(Exception ex) {
+            return new ServiceResponse<EventInfoDto?>
+            {
+                Success = false,
+                Error = $"Failed to create packages: {ex.Message}"
+            };
+        }
+
+        var eventInfoDto = EventFactory.CreateEvent(entity);
+        if (packageResponse != null && packageResponse.Count > 0)
+        {
+            eventInfoDto.Packages = packageResponse;
+        }
+        return new ServiceResponse<EventInfoDto?>
+        {
+            Success = true,
+            Message = "Event created successfully",
+            Data = eventInfoDto
+        };
     }
+
+
+
+
     public async Task UpdateEventAsync(Event updatedEvent)
     {
         _set.Update(updatedEvent);

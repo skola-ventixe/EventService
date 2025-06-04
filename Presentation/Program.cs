@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Data;
 using Presentation.Services;
@@ -32,6 +33,22 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAllOrigins");
 
 app.UseAuthorization();
+
+//app.Use(async (context, next) => {
+//    context.Request.EnableBuffering();
+
+//    using (var reader = new StreamReader(
+//        context.Request.Body,
+//        encoding: Encoding.UTF8,
+//        leaveOpen: true))
+//    {
+//        var body = await reader.ReadToEndAsync();
+//        Console.WriteLine($"Request body: {body}");
+//        context.Request.Body.Position = 0;
+//    }
+
+//    await next();
+//});
 
 app.MapControllers();
 
