@@ -27,7 +27,7 @@ builder.Services.AddHttpClient();
 
 
 builder.Services.AddDbContext<EventDataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
+    options.UseSqlServer(builder.Configuration.GetValue<string>("SqlServer")));
 
 var app = builder.Build();
 
